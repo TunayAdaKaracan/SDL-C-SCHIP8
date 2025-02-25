@@ -347,8 +347,6 @@ void chip_tick(Chip* chip){
 }
 
 void chip_load_program(Chip* chip, FILE* file, uint16_t file_size, uint16_t offset){
-    for(int i=0; i<file_size; i++){
-        chip->memory[offset+i] = fgetc(file);
-    }
+    fread(&chip->memory[offset], sizeof(uint8_t), file_size, file);
     chip->program_counter = 0x200;
 }
