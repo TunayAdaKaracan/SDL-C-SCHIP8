@@ -6,6 +6,7 @@
 
 #define CHIP_MAX_MEMORY 4096
 #define CHIP_MAX_STACK 32
+#define CHIP_PROGRAM_OFFSET 0x200
 
 typedef struct Chip {
     uint32_t tick_speed;

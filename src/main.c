@@ -97,7 +97,7 @@ int8_t setup(char* rom_location){
     uint16_t file_size = ftell(file);
     fseek(file, 0L, SEEK_SET);
 
-    chip_load_program(game.chip, file, file_size, 0x200);
+    chip_load_program(game.chip, file, file_size, CHIP_PROGRAM_OFFSET);
     fclose(file);
 
     SDL_Log("File loaded to memory successfully");
