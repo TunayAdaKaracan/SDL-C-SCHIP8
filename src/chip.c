@@ -6,7 +6,7 @@
 #define UNUSED(v) (void)v
 typedef void(*ChipOperation)(Chip*, uint16_t, uint8_t, uint8_t);
 
-const uint8_t sprites_data[] = {
+const static uint8_t sprites_data[] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
         0x20, 0x60, 0x20, 0x20, 0x70,  // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0,  // 2
@@ -25,10 +25,10 @@ const uint8_t sprites_data[] = {
         0xF0, 0x80, 0xF0, 0x80, 0x80   // F
 };
 
-bool set_pixel(Chip* chip, uint8_t x, uint8_t y);
-void clear_screen(Chip* chip);
+static bool set_pixel(Chip* chip, uint8_t x, uint8_t y);
+static void clear_screen(Chip* chip);
 
-void opcode_0nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_0nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vx); UNUSED(vy);
     if(opcode == 0x00E0){
         clear_screen(chip);
@@ -44,12 +44,12 @@ void opcode_0nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     }
 }
 
-void opcode_1nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_1nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vx); UNUSED(vy);
     chip->program_counter = (opcode & 0xFFF);
 }
 
-void opcode_2nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_2nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vx); UNUSED(vy);
     if(chip->stack_counter+1 >= CHIP_MAX_STACK){
         return;
@@ -58,38 +58,38 @@ void opcode_2nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     chip->program_counter = (opcode & 0xFFF);
 }
 
-void opcode_3nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_3nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     if(chip->registers[vx] == (opcode & 0xFF)){
         chip->program_counter += 2;
     }
 }
 
-void opcode_4nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_4nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     if(chip->registers[vx] != (opcode & 0xFF)){
         chip->program_counter += 2;
     }
 }
 
-void opcode_5nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_5nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     if((opcode & 0xF) != 0) return;
     if(chip->registers[vx] == chip->registers[vy]){
         chip->program_counter += 2;
     }
 }
 
-void opcode_6nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_6nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     chip->registers[vx] = (opcode & 0xFF);
 }
 
-void opcode_7nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_7nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     chip->registers[vx] = chip->registers[vx] + (opcode & 0xFF);
 }
 
-void opcode_8nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_8nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     uint8_t last_bits = opcode & 0xF;
     if(last_bits == 0x0){
         chip->registers[vx] = chip->registers[vy];
@@ -151,30 +151,30 @@ void opcode_8nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     }
 }
 
-void opcode_9nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_9nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     if((opcode & 0xF) != 0) return;
     if(chip->registers[vx] != chip->registers[vy]){
         chip->program_counter += 2;
     }
 }
 
-void opcode_Annn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_Annn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vx); UNUSED(vy);
     chip->addres_register = (opcode & 0xFFF);
 }
 
-void opcode_Bnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_Bnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     chip->program_counter = chip->registers[vx] + (opcode & 0xFFF);
 }
 
-void opcode_Cnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_Cnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     int random = rand() & 0xFF;
     chip->registers[vx] = random & (opcode & 0xFF);
 }
 
-void opcode_Dnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy) {
+static void opcode_Dnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy) {
     uint8_t width = 8;
     uint8_t height = (opcode & 0xF);
 
@@ -202,7 +202,7 @@ void opcode_Dnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy) {
     }
 }
 
-void opcode_Ennn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_Ennn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     uint8_t last_bits = (opcode & 0xFF);
     uint8_t keycheck = chip->registers[vx] & 0xF;
@@ -216,7 +216,7 @@ void opcode_Ennn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     }
 }
 
-void opcode_Fnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
+static void opcode_Fnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     UNUSED(vy);
     uint8_t last_bits = (opcode & 0xFF);
     if(last_bits == 0x07){
@@ -307,13 +307,13 @@ void chip_destroy(Chip **chip){
 
 // 0000 0000 0000 0000 0000 0000 0000 0000 | 0000 0000 0000 0000 0000 0000 0000 0000
 // Screen
-bool set_pixel(Chip* chip, uint8_t x, uint8_t y){
+static bool set_pixel(Chip* chip, uint8_t x, uint8_t y){
     int index = y * 64 + x;
     chip->screen[index] = chip->screen[index] ^ 0x1;
     return chip->screen[index] == 0;
 }
 
-void clear_screen(Chip* chip){
+static void clear_screen(Chip* chip){
     for(int index=0; index<64*32; index++){
         chip->screen[index] = 0;
     }
@@ -342,6 +342,7 @@ void chip_keyup(Chip* chip, uint8_t key){
     if(chip->keyevent.wait_key_event){
         chip->paused = false;
         chip->registers[chip->keyevent.register_store] = key;
+        chip->keyevent.wait_key_event = false;
     }
 }
 
