@@ -1,4 +1,4 @@
-CC=cc
+CC=clang
 CFLAGS=-g -Wall -Wextra
 
 # compiler-specific flags
@@ -27,6 +27,7 @@ else ifeq ($(DEBUG),2)
                 CFLAGS+=-fsanitize=address
         else ifeq ($(CC),clang)
                 # clang sanitizer
+                CFLAGS+=-fsanitize=address
         else
         endif
 else
