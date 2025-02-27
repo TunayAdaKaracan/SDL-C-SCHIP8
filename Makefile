@@ -42,6 +42,6 @@ clean:
 	rm ./out/main
 
 run:
-	./out/main
+	./out/main $(PATH)
 
 compile: build run

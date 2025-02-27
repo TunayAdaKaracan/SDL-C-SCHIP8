@@ -4,6 +4,8 @@
 #include "chip.h"
 
 #define SCREEN_SCALE 16
+#define SETUP_FAILURE -1
+#define SETUP_SUCCESS 0
 
 struct {
     SDL_Window* window;
@@ -27,12 +29,6 @@ bool create_window(void){
     game.renderer = SDL_CreateRenderer(game.window, -1, 0);
     if(!game.renderer){
         fprintf(stderr, "Error creating SDL Renderer: %s\n", SDL_GetError());
-        return false;
-    }
-
-    game.chip = chip_create(60, true);
-    if(!game.chip){
-        fprintf(stderr, "Error creating Chip-8\n");
         return false;
     }
     return true;
@@ -73,7 +69,7 @@ uint8_t map_keyboard_to_key(int key){
         case SDLK_v:
             return 0xF;
         default:
-            return 255;
+            return 0xFF;
     }
 }
 
@@ -84,11 +80,17 @@ void destroy_window(void){
     chip_destroy(&game.chip);
 }
 
-void setup(void){
-    FILE* file = fopen("./roms/3-corax+.ch8", "r");
+int8_t setup(char* rom_location){
+    game.chip = chip_create(60, false);
+    if(!game.chip){
+        fprintf(stderr, "Error creating Chip-8\n");
+        return SETUP_FAILURE;
+    }
+
+    FILE* file = fopen(rom_location, "r");
     if(!file){
         fprintf(stderr, "Couldn't open file\n");
-        return;
+        return SETUP_FAILURE;
     }
 
     fseek(file, 0L, SEEK_END);
@@ -96,10 +98,10 @@ void setup(void){
     fseek(file, 0L, SEEK_SET);
 
     chip_load_program(game.chip, file, file_size, 0x200);
-    SDL_Log("File loaded to memory successfully");
-
-    game.chip->paused = false;
     fclose(file);
+
+    SDL_Log("File loaded to memory successfully");
+    return SETUP_SUCCESS;
 }
 
 bool process_events(void){
@@ -110,12 +112,12 @@ bool process_events(void){
                 return true;
             case SDL_KEYDOWN:
                 if(event.key.keysym.sym == SDLK_ESCAPE) return true;
-                if(map_keyboard_to_key(event.key.keysym.sym) != 255){
+                if(map_keyboard_to_key(event.key.keysym.sym) != 0xFF){
                     chip_keydown(game.chip, map_keyboard_to_key(event.key.keysym.sym));
                 }
                 break;
             case SDL_KEYUP:
-                if(map_keyboard_to_key(event.key.keysym.sym) != 255){
+                if(map_keyboard_to_key(event.key.keysym.sym) != 0xFF){
                     chip_keyup(game.chip, map_keyboard_to_key(event.key.keysym.sym));
                 }
                 break;
@@ -146,13 +148,22 @@ void render(void){
     SDL_RenderPresent(game.renderer);
 }
 
-int main(void){
-    if(!create_window()){
-        destroy_window();
-        return -1;
+int main(int argc, char** argv){
+    if(argc <= 1){
+        fprintf(stderr, "%d Please enter a path to rom you want to open.\n", argc);
+        return EXIT_FAILURE;
     }
 
-    setup();
+    int8_t result = setup(argv[1]);
+    if(result == SETUP_FAILURE){
+        return EXIT_FAILURE;
+    }
+
+    if(!create_window()){
+        destroy_window();
+        return EXIT_FAILURE;
+    }
+
     while(true){
         if(process_events()) break;
         update();
@@ -164,5 +175,5 @@ int main(void){
 
     destroy_window();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
