@@ -121,7 +121,6 @@ void opcode_8nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     }
 
     if(last_bits == 0x5){
-        // TODO: Handle underflow
         bool flag = false;
         if(chip->registers[vx] >= chip->registers[vy]) flag = true;
         chip->registers[vx] = chip->registers[vx] - chip->registers[vy];
@@ -145,9 +144,9 @@ void opcode_8nnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy){
     }
 
     if(last_bits == 0xE){
-        //TODO: Check test suite
-        chip->registers[0xF] = (chip->registers[vx] & 0x80) >> 7;
+        bool tmp = (chip->registers[vx] & 0x80) >> 7;
         chip->registers[vx] = (chip->registers[vx] << 1) & 0xFF;
+        chip->registers[0xF] = tmp;
         return;
     }
 }
@@ -181,13 +180,19 @@ void opcode_Dnnn(Chip* chip, uint16_t opcode, uint8_t vx, uint8_t vy) {
 
     chip->registers[0xF] = 0;
 
+    uint8_t origin_x = chip->registers[vx] % 64;
+    uint8_t origin_y = chip->registers[vy] % 32;
+
     for (uint8_t row = 0; row < height; row++) {
-        uint8_t y_position = (chip->registers[vy] + row) % 32;
+        uint8_t y_position = origin_y + row;
+
+        if(y_position >= 32) break;
 
         uint8_t sprite = chip->memory[chip->addres_register + row];
 
         for (uint8_t col = 0; col < width; col++) {
-            uint8_t x_position = (chip->registers[vx] + col) % 64;
+            uint8_t x_position = origin_x + col;
+            if(x_position >= 64) break;
             if (sprite & (0x1 << (7 - col))) {
                 if (set_pixel(chip, x_position, y_position)) {
                     chip->registers[0xF] = 1;
