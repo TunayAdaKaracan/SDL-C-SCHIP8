@@ -97,6 +97,11 @@ int8_t setup(char* rom_location){
     uint16_t file_size = ftell(file);
     fseek(file, 0L, SEEK_SET);
 
+    if(file_size > CHIP_MAX_MEMORY-CHIP_PROGRAM_OFFSET){
+        fprintf(stderr, "File is too big to read to Chip8 memory!");
+        return SETUP_FAILURE;
+    }
+
     chip_load_program(game.chip, file, file_size, CHIP_PROGRAM_OFFSET);
     fclose(file);
 
