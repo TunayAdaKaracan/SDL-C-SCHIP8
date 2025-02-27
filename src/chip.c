@@ -342,14 +342,14 @@ void chip_keyup(Chip* chip, uint8_t key){
 
 // Tick loop
 void chip_tick(Chip* chip){
-    if(chip->paused) return;
-
     if(chip->delay_timer > 0){
         chip->delay_timer -= 1;
     }
     if(chip->sound_timer > 0){
         chip->sound_timer -= 1;
     }
+
+    if(chip->paused) return;
     uint32_t remaining_ticks = chip->tick_speed;
 
     while(remaining_ticks != 0 && !chip->paused){
